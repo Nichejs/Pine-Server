@@ -7,8 +7,9 @@
     "express": "~3.3.4",
     "socket.io": "~0.9.16",
     "nano" : "~4.1.4",
-    "requirejs" : "~2.1.9"
-  },
+    "requirejs" : "~2.1.9",
+  	"connect" : "~2.11.x"
+	},
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

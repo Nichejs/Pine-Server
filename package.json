@@ -7,7 +7,11 @@
     "express": "~3.3.4",
     "socket.io": "~0.9.16",
     "nano" : "~4.1.4",
-    "requirejs" : "~2.1.9"
+    "requirejs" : "~2.1.9",
+    "connect" : "~2.11.0",
+    "sinon" : "~1.7.3",
+    "mocha" : "~1.14.0",
+    "assert" : "~0.4.9"
   },
   "devDependencies": {},
   "scripts": {

@@ -5,7 +5,7 @@ var express = require('express'),
 	server = http.createServer(app),
 	path = require('path'),
 	io = require('socket.io').listen(server),
-	nano = require('nano')('http://pi:pi@localhost:8000'),
+	nano = require('nano')('http://localhost:5984'),
 	crypto = require('crypto'),
 	connect = require('connect'),
 	parseCookie = connect.utils.parseCookie,
@@ -16,6 +16,9 @@ var express = require('express'),
 
 server.listen(3000);
 console.log("Express server listening on port 3000");
+
+// VisibleForTesting functions
+module.exports.processUser = processUser;
 
 // Allow access to /public folder
 app.configure(function () {
@@ -35,19 +38,36 @@ app.configure(function () {
     app.use(express.static(path.join(__dirname,'/public'), {maxAge: 0}));
 });
 
+/**
+ * Process a list of users retrieved from the DB.
+ * 
+ * @param err - error message
+ * @param body - the response from the DB call
+ * @return - json object containing { title : ... , data: ... , error: ... }
+ */
+function processUser(err, body) {
+    var response = {};
+    response.data = [];
+    
+    if(!err) {
+        response.title = "Users";
+        body.rows.forEach(function(doc){
+            response.data.push(doc);
+        });
+    } else {
+        response.title = "Error";
+        response.error = err;
+    }
+
+    return response;
+}
+
+
 // List all users
 app.get('/api/list', function (req, res) {
 	var users = nano.use('users');
 	users.list(function(err, body){
-		var response = 'An error occured';
-		if(!err){
-			response = "<h1>Users:</h1><ul>";
-			body.rows.forEach(function(doc){
-				console.log(doc);
-				response += "<li>"+doc.id+"</li>";
-			});
-			response += "</ul>";
-		}
+		var response = processUser(err, body);
 		res.send(response);
 	});
 });
@@ -55,7 +75,7 @@ app.get('/api/list', function (req, res) {
 // CouchDB Access
 app.post('/api/db', function (req, res) {
 	// Nano!
-	var nano = require('nano')('http://pi:pi@localhost:8000');
+	var nano = require('nano')('http://localhost:5984');
     if(req.body == undefined){
     	req.body = {user : {type : 'Unsupported'}};
     }
@@ -156,7 +176,7 @@ io.sockets.on('connection', function(socket){
 	});
 	
 	socket.on('disconnect', function(){
-		
+
 		io.sockets.in('server').emit('message', {room:'server', type: 'disconnect', user: socket.handshake.user});
 		
 		clearInterval(usersOnlineInterval);

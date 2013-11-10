@@ -5,7 +5,7 @@ var express = require('express'),
 	server = http.createServer(app),
 	path = require('path'),
 	io = require('socket.io').listen(server),
-	nano = require('nano')('http://localhost:8000'),
+	nano = require('nano')('http://pi:pi@localhost:8000'),
 	crypto = require('crypto'),
 	connect = require('connect'),
 	parseCookie = connect.utils.parseCookie,
@@ -75,7 +75,7 @@ app.get('/api/list', function (req, res) {
 // CouchDB Access
 app.post('/api/db', function (req, res) {
 	// Nano!
-	var nano = require('nano')('http://localhost:8000');
+	var nano = require('nano')('http://pi:pi@localhost:8000');
     if(req.body == undefined){
     	req.body = {user : {type : 'Unsupported'}};
     }

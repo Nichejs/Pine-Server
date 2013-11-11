@@ -179,16 +179,12 @@ io.sockets.on('connection', function(socket){
 
 		io.sockets.in('server').emit('message', {room:'server', type: 'disconnect', user: socket.handshake.user});
 		
-		clearInterval(usersOnlineInterval);
-		
 		users--;
 	});
 	
-	// Socket intervals
-	var usersOnlineInterval = setInterval(function(){
-		io.sockets.in('server').emit('usersOnline', {count:users});
-	},1000);
-	
 });
 
-
+// Socket intervals
+var usersOnlineInterval = setInterval(function(){
+	io.sockets.in('server').emit('usersOnline', {count:users});
+},1000);

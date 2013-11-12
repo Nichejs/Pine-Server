@@ -176,14 +176,12 @@ io.sockets.on('connection', function(socket){
 	});
 	
 	socket.on('map', function(data){
-		
-		var resources = getResources(data.coordinates, data.size);
-		
+		// Send the requested data
 		socket.emit('map', {
 			coordinates : data.coordinates,
 			size: data.size,
-			basesheets: [],
-			resources: resources
+			basesheets: basesheets(data.coordinates, data.size),
+			resources: getResources(data.coordinates, data.size)
 		});
 	});
 	
@@ -278,5 +276,29 @@ function getResources(coordinates, size){
 function basesheets(coordinates, size){
 	// Basesheets are always 200x200px, so I just need to iterate
 	// over the centers of the requested basesheets and generate a pseudo random color
+	// First get the top left basesheet center
+	var first = {
+		x: coordinates.x - size.w/2,
+		y: coordinates.y - size.h/2 + 200
+	};
 	
+	var basesheets = [];
+	
+	for(var col=0; col < size.w/200; col++){
+		for(var row=0; row < size.h/200; row++){
+			// Generate a pseudo random color
+			var color = 'rgba(' + Math.ceil(70 + Math.abs(Math.sin(coordinates.x*col*row*200))*20) + ', 120,' + Math.ceil(30 + Math.abs( Math.sin( coordinates.y * col*row*200))*25)+', 1)';
+			
+			// Store
+			basesheets.push({
+				centerp : {
+					x: first.x + col*200,
+					y: first.y + row*200
+				},
+				color : color
+			});
+		}
+	}
+	
+	return basesheets;
 }

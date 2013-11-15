@@ -213,7 +213,7 @@ function getResources(coordinates, size){
 	var resources = [
 		{
 			type : 'tree',
-			probability: 0.2,	// Chances of it appearing. Future work might make this dependant on the area
+			probability: 0.1,	// Chances of it appearing. Future work might make this dependant on the area
 			sizes: [60,120]		// min, max
 		}
 	];
@@ -234,14 +234,15 @@ function getResources(coordinates, size){
 	// Iterate over each resource
 	for(var a=0; a<resources.length; a++){
 		// Number of resources to place
-		var coordNum = size.w*size.h*resources[a].probability/1000;
+		var coordNum = Math.max(50,Math.floor(size.w*size.h*resources[a].probability/3000));
 		
 		// Iterate over each coordinate
 		for(var b=0;b<coordNum;b++){
 			// Generate a possible set of x,y
 			var possibleCoordinates = {
-				x: Math.floor(Math.sin((b+1)*15000)*(size.w/2)),
-				y: Math.floor(Math.sin((b+1)*6000)*(size.h/2))
+				x: coordinates.x + Math.floor(Math.sin((coordinates.x+b+1)*15000)*Math.cos((coordinates.y+b+10)*15000)*(size.w/2)),
+				y: coordinates.y + Math.floor(Math.cos((coordinates.y+b+20)*6000)*Math.sin((coordinates.x+b+5)*10000)*(size.h/2)),
+				z: 0,
 			};
 			
 			// Check if they are available
@@ -279,7 +280,8 @@ function basesheets(coordinates, size){
 	// First get the top left basesheet center
 	var first = {
 		x: coordinates.x - size.w/2,
-		y: coordinates.y - size.h/2 + 200
+		y: coordinates.y - size.h/2 + 200,
+		z: 0
 	};
 	
 	var basesheets = [];
@@ -287,13 +289,14 @@ function basesheets(coordinates, size){
 	for(var col=0; col < size.w/200; col++){
 		for(var row=0; row < size.h/200; row++){
 			// Generate a pseudo random color
-			var color = 'rgba(' + Math.ceil(70 + Math.abs(Math.sin(coordinates.x*col*row*200))*20) + ', 120,' + Math.ceil(30 + Math.abs( Math.sin( coordinates.y * col*row*200))*25)+', 1)';
+			var color = 'rgba(' + Math.ceil(70 + Math.abs(Math.sin(first.x + col*200))*20) + ', 120,' + Math.ceil(30 + Math.abs( Math.sin( first.y + col*200))*25)+', 1)';
 			
 			// Store
 			basesheets.push({
 				centerp : {
 					x: first.x + col*200,
-					y: first.y + row*200
+					y: first.y + row*200,
+					z: 0
 				},
 				color : color
 			});

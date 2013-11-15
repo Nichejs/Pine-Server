@@ -175,6 +175,16 @@ io.sockets.on('connection', function(socket){
 	    socket.emit('ping', data);
 	});
 	
+	socket.on('map', function(data){
+		// Send the requested data
+		socket.emit('map', {
+			coordinates : data.coordinates,
+			size: data.size,
+			basesheets: basesheets(data.coordinates, data.size),
+			resources: getResources(data.coordinates, data.size)
+		});
+	});
+	
 	socket.on('disconnect', function(){
 
 		io.sockets.in('server').emit('message', {room:'server', type: 'disconnect', user: socket.handshake.user});
@@ -188,3 +198,107 @@ io.sockets.on('connection', function(socket){
 var usersOnlineInterval = setInterval(function(){
 	io.sockets.in('server').emit('usersOnline', {count:users});
 },1000);
+
+// ----------------------------------------- //
+
+/**
+ * Dynamic resource generation based on the coordinates.
+ * it will generate the same resources for each set of coordinates 
+ * @param {Object} Central coordinates of the requested area {x,y}
+ * @param {size} Size of the requested area {w,h}
+ */
+function getResources(coordinates, size){
+	
+	// Resource definition
+	var resources = [
+		{
+			type : 'tree',
+			probability: 0.2,	// Chances of it appearing. Future work might make this dependant on the area
+			sizes: [60,120]		// min, max
+		}
+	];
+	
+	// Container for the coordinates in use. To ensure that there are no duplicates.
+	var usedCoordinates = [],
+		returnResources = [];
+	
+	/*
+	 * Now iterate over the coordinates and generate resources.
+	 * The coordinates refer to the central point in the rectangle,
+	 * so possible coordinates for elements will be {x+-width/2, y+-height/2}
+	 * Instead of using a random number generator I will use a sine,
+	 * because in JS Math.random doesn't have the option to set the seed.
+	 * This should select pseudo randomly some coordinates for each resource.
+	 */
+	
+	// Iterate over each resource
+	for(var a=0; a<resources.length; a++){
+		// Number of resources to place
+		var coordNum = size.w*size.h*resources[a].probability/1000;
+		
+		// Iterate over each coordinate
+		for(var b=0;b<coordNum;b++){
+			// Generate a possible set of x,y
+			var possibleCoordinates = {
+				x: Math.floor(Math.sin((b+1)*15000)*(size.w/2)),
+				y: Math.floor(Math.sin((b+1)*6000)*(size.h/2))
+			};
+			
+			// Check if they are available
+			if(usedCoordinates.indexOf(possibleCoordinates)>0) continue;
+			
+			// They are, store and add to the return array
+			usedCoordinates.push(possibleCoordinates);
+			
+			// Generate a pseudo random size
+			var resourceSize = Math.floor(resources[a].sizes[1] - (resources[a].sizes[1] - resources[a].sizes[0]) * Math.abs(Math.sin(possibleCoordinates.x * possibleCoordinates.y)));
+			
+			// Store in return array
+			returnResources.push({
+				type: resources[a].type,
+				coordinates: possibleCoordinates,
+				properties: {
+					size: Math.min(resources[a].sizes[1], Math.max(resources[a].sizes[0], resourceSize))
+				}
+			});
+		}
+	}
+	
+	return returnResources;
+}
+
+/**
+ * Dynamically generate the basesheet color. In the future this color
+ * might depend on the area type (ocean, land... )
+ * @param {Object} Central coordinates of the requested area {x,y}
+ * @param {size} Size of the requested area {w,h}
+ */
+function basesheets(coordinates, size){
+	// Basesheets are always 200x200px, so I just need to iterate
+	// over the centers of the requested basesheets and generate a pseudo random color
+	// First get the top left basesheet center
+	var first = {
+		x: coordinates.x - size.w/2,
+		y: coordinates.y - size.h/2 + 200
+	};
+	
+	var basesheets = [];
+	
+	for(var col=0; col < size.w/200; col++){
+		for(var row=0; row < size.h/200; row++){
+			// Generate a pseudo random color
+			var color = 'rgba(' + Math.ceil(70 + Math.abs(Math.sin(coordinates.x*col*row*200))*20) + ', 120,' + Math.ceil(30 + Math.abs( Math.sin( coordinates.y * col*row*200))*25)+', 1)';
+			
+			// Store
+			basesheets.push({
+				centerp : {
+					x: first.x + col*200,
+					y: first.y + row*200
+				},
+				color : color
+			});
+		}
+	}
+	
+	return basesheets;
+}

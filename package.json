@@ -1,5 +1,5 @@
 {
-  "name": "OpenRPG",
+  "name": "pinegame",
   "version": "0.0.1",
   "description": "Massive Multiplayer Online Game",
   "main": "server.js",
